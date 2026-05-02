@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -8,7 +9,14 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
+	"github.com/prantoran/rssagg/internal/database"
+
+	_ "github.com/lib/pq"
 )
+
+type apiConfig struct {
+	DB *database.Queries
+}
 
 func AllowOriginFunc(r *http.Request, origin string) bool {
 	// TODO: []string{"http://*", "https://*"}
@@ -21,9 +29,28 @@ func main() {
 	godotenv.Load() // Load environment variables from .env file
 	portStr := os.Getenv("PORT")
 	if portStr == "" {
-		println("PORT environment variable is not set.")
+		log.Fatal("PORT environment variable is not set.")
 	} else {
 		println("PORT environment variable is set to:", portStr)
+	}
+
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL environment variable is not set.")
+	} else {
+		println("DB_URL environment variable is set to:", dbURL)
+	}
+
+	conn, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal("Error opening database:", err)
+	}
+	defer conn.Close()
+
+	queries := database.New(conn)
+
+	apiCfg := &apiConfig{
+		DB: queries,
 	}
 
 	router := chi.NewRouter()
@@ -40,6 +67,7 @@ func main() {
 	v1Router := chi.NewRouter()
 	v1Router.Get("/healthz", handlerReadiness)
 	v1Router.Get("/err", handlerErr)
+	v1Router.Post("/users", apiCfg.handlerCreateUser)
 	router.Mount("/v1", v1Router)
 
 	srv := &http.Server{
