@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/prantoran/rssagg/internal/auth"
 	"github.com/prantoran/rssagg/internal/database"
 )
 
@@ -37,18 +36,6 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 	respWithJSON(w, http.StatusCreated, databaseUserToUser(user))
 }
 
-func (apiCfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request) {
-	apiKey, err := auth.GetAPIKey(r.Header)
-	if err != nil {
-		respWithErr(w, http.StatusForbidden, fmt.Sprintf("Auth error: %v", err))
-		return
-	}
-
-	user, err := apiCfg.DB.GetUserByAPIKey(r.Context(), apiKey)
-	if err != nil {
-		respWithErr(w, http.StatusBadRequest, fmt.Sprintf("Error fetching user: %v", err))
-		return
-	}
-
+func (apiCfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request, user database.User) {
 	respWithJSON(w, http.StatusOK, databaseUserToUser(user))
 }
