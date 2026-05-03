@@ -24,8 +24,6 @@ func AllowOriginFunc(r *http.Request, origin string) bool {
 }
 
 func main() {
-	println("Hello, World!")
-
 	godotenv.Load() // Load environment variables from .env file
 	portStr := os.Getenv("PORT")
 	if portStr == "" {
@@ -68,6 +66,7 @@ func main() {
 	v1Router.Get("/healthz", handlerReadiness)
 	v1Router.Get("/err", handlerErr)
 	v1Router.Post("/users", apiCfg.handlerCreateUser)
+	v1Router.Get("/users", apiCfg.handlerGetUser)
 	router.Mount("/v1", v1Router)
 
 	srv := &http.Server{
@@ -79,5 +78,4 @@ func main() {
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
-
 }

@@ -24,7 +24,10 @@ adminer:
 	 adminer
 
 migrate:
-	goose postgres postgres://postgres:secret@localhost:5432/rssagg up
+	cd sql/schema && goose postgres postgres://postgres:secret@localhost:5432/rssagg up && cd ../..
 
 migrate-down:
-	goose postgres postgres://postgres:secret@localhost:5432/rssagg down
+	cd sql/schema && goose postgres postgres://postgres:secret@localhost:5432/rssagg down && cd ../..
+
+sqlc:
+	sqlc generate # regenerate sqlc code after editing .sql files
