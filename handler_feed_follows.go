@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/prantoran/rssagg/internal/database"
 )
@@ -39,11 +40,31 @@ func (apiCfg *apiConfig) handlerCreateFeedFollow(w http.ResponseWriter, r *http.
 
 func (apiCfg *apiConfig) handlerGetFeedFollows(w http.ResponseWriter, r *http.Request, user database.User) {
 
-	feedFollows, err := apiCfg.DB.GetFeedFollow(r.Context(), user.ID)
+	feedFollows, err := apiCfg.DB.GetFeedFollows(r.Context(), user.ID)
 	if err != nil {
 		respWithErr(w, http.StatusInternalServerError, fmt.Sprintf("Error getting feed follow: %v", err))
 		return
 	}
 
 	respWithJSON(w, http.StatusCreated, databaseFeedFollowsToFeedFollows(feedFollows))
+}
+
+func (apiCfg *apiConfig) handlerDeleteFeedFollow(w http.ResponseWriter, r *http.Request, user database.User) {
+	FeedFollowIDStr := chi.URLParam(r, "feedFollowID")
+	feedFollowID, err := uuid.Parse(FeedFollowIDStr)
+	if err != nil {
+		respWithErr(w, http.StatusBadRequest, fmt.Sprintf("Invalid feed follow ID: %v", err))
+		return
+	}
+
+	err = apiCfg.DB.DeleteFeedFollow(r.Context(), database.DeleteFeedFollowParams{
+		ID:     feedFollowID,
+		UserID: user.ID,
+	})
+	if err != nil {
+		respWithErr(w, http.StatusInternalServerError, fmt.Sprintf("Error deleting feed follow: %v", err))
+		return
+	}
+
+	respWithJSON(w, http.StatusNoContent, nil)
 }
