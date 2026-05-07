@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
@@ -45,11 +46,13 @@ func main() {
 	}
 	defer conn.Close()
 
-	queries := database.New(conn)
+	db := database.New(conn)
 
 	apiCfg := &apiConfig{
-		DB: queries,
+		DB: db,
 	}
+
+	go startScraping(db, 10, time.Minute)
 
 	router := chi.NewRouter()
 
