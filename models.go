@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/prantoran/rssagg/internal/database"
 )
@@ -28,6 +30,17 @@ type FeedFollow struct {
 	UpdatedAt string    `json:"updated_at"`
 	UserID    uuid.UUID `json:"user_id"`
 	FeedID    uuid.UUID `json:"feed_id"`
+}
+
+type Post struct {
+	ID          uuid.UUID `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Title       string    `json:"title"`
+	Description *string   `json:"description"`
+	PublishedAt time.Time `json:"published_at"`
+	Url         string    `json:"url"`
+	FeedID      uuid.UUID `json:"feed_id"`
 }
 
 func databaseUserToUser(dbUser database.User) User {
@@ -75,4 +88,31 @@ func databaseFeedFollowsToFeedFollows(dbFeedFollows []database.FeedFollow) []Fee
 		feedFollows = append(feedFollows, databaseFeedFollowToFeedFollow(ff))
 	}
 	return feedFollows
+}
+
+func databasePostToPost(dbPost database.Post) Post {
+	var description *string
+	if dbPost.Description != "" {
+		description = &dbPost.Description
+	} else {
+		description = nil
+	}
+	return Post{
+		ID:          dbPost.ID,
+		CreatedAt:   dbPost.CreatedAt,
+		UpdatedAt:   dbPost.UpdatedAt,
+		Title:       dbPost.Title,
+		Description: description,
+		PublishedAt: dbPost.PublishedAt,
+		Url:         dbPost.Url,
+		FeedID:      dbPost.FeedID,
+	}
+}
+
+func databasePostsToPosts(dbPosts []database.Post) []Post {
+	var posts []Post
+	for _, p := range dbPosts {
+		posts = append(posts, databasePostToPost(p))
+	}
+	return posts
 }
